@@ -58,6 +58,26 @@ mysql> SELECT * FROM INFORMATION_SCHEMA.TRIGGERS WHERE TRIGGER_SCHEMA='schemaA'\
 SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE, COLUMN_TYPE, IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 1, 0) AS IS_UNSIGNED, (CASE DATA_TYPE WHEN 'tinyint' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 255, 127) WHEN 'smallint' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 65535, 32767) WHEN 'mediumint' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 16777215, 8388607) WHEN 'int' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 4294967295, 2147483647) WHEN 'bigint' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 18446744073709551615, 9223372036854775807) END) AS MAX_VALUE,AUTO_INCREMENT,ROUND(AUTO_INCREMENT / (CASE DATA_TYPE WHEN 'tinyint' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 255, 127) WHEN 'smallint' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 65535, 32767) WHEN 'mediumint' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 16777215, 8388607) WHEN 'int' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 4294967295, 2147483647) WHEN 'bigint' THEN IF(LOCATE('unsigned', COLUMN_TYPE) > 0, 18446744073709551615, 9223372036854775807) END), 4) AS AUTO_INCREMENT_RATIO FROM INFORMATION_SCHEMA.COLUMNS INNER JOIN INFORMATION_SCHEMA.TABLES USING (TABLE_SCHEMA, TABLE_NAME) WHERE TABLE_SCHEMA NOT IN ('mysql', 'INFORMATION_SCHEMA', 'performance_schema', 'sys') AND EXTRA='auto_increment';
 ```
 
+## Query to find active transactions and process ID accosiated to it
+```SQL
+SELECT 
+    t.trx_id AS transaction_id,
+    t.trx_state,
+    t.trx_started,
+    p.id AS processlist_id,
+    p.user,
+    p.host,
+    p.db,
+    p.command,
+    p.time,
+    p.state AS process_state,
+    p.info AS current_query
+FROM information_schema.innodb_trx t
+JOIN information_schema.processlist p 
+  ON t.trx_mysql_thread_id = p.id
+ORDER BY t.trx_started;
+```
+
 ## Dump MySQL instance using mysql shell
 Backup path = /data/mysql/dump
 Schemas to exclude from backup in array --excludeSchemas
